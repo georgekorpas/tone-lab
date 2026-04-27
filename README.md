@@ -104,6 +104,19 @@ N marked
 
 Same workflow but using the bottom-left **cyan S** badge. SYM rolls a random *even* integer for each S-marked param (snapped to the param's own grid), producing more consonant outcomes. R and S are mutually exclusive per parameter. SYM is suppressed on RATIO OFFSET params (where "even" is meaningless).
 
+### MIDI EXPORT box (orange)
+
+```
+STEPS [  16  ]
+[ MIDI ] [ TXT ]
+```
+
+Dumps the **pure note pattern** of the sequencer to disk so you can play it on another device — a hardware sequencer, a DAW track, an external synth's arp, etc. Only notes are exported: no parameter locks, no automation, no per-step dots, no FX state.
+
+- **STEPS** — number of steps to write (1..64). Defaults to the active sequencer length on load. The exported file is exactly this long. Steps beyond your current pattern are written as rests, so you can pad a 16-step idea out to 32 if needed.
+- **MIDI** — downloads `tonelab_seq_<timestamp>.mid`, a Standard MIDI File (format 0, single track, MIDI channel 1, velocity 100, PPQ 480). Each step is one 16th-note tick at the file's nominal grid; **no tempo meta is baked in** so the destination device sets its own BPM. Most DAWs and hardware sequencers will simply re-time the steps to whatever tempo they're running.
+- **TXT** — downloads `tonelab_seq_<timestamp>.txt`, a plain-text dump (one line per step: `step  midi  noteName`, rests shown as `---`). Handy for visually checking the pattern or feeding into tools that don't speak SMF.
+
 ---
 
 ## 6. SYN 1 — the engine's main controls
@@ -270,7 +283,9 @@ Each cell shows:
 - **Bottom-left PURPLE dot** → scope MIGRATE to this step. Acts standalone — works even with global MIGRATE off.
 - **Bottom-right GRAY square** → toggle PARAM LOCK edit mode for this step.
 
-Click step value: ↑ semitone. Shift+click: ↓ semitone. Alt+click: rest.
+**Editing notes:** click step value to step ↑ a semitone, Shift+click to step ↓, Alt+click to make it a rest. Right-click also steps down. The full available range is **C1 (MIDI 24) to C7 (MIDI 96)** — clicks past either end are clamped, never wrapped.
+
+The two octave buttons in the TRANSPOSE sub-box transpose the entire pattern up or down by 12 semitones, and Shift on the existing ±SEMI buttons does ±octave. All transposes are clamped to C1..C7.
 
 ### Header sub-boxes (left → right)
 
@@ -295,12 +310,17 @@ Per-step green dots scope it: when any are set, only dotted steps are reseeded; 
 
 #### MIGRATE (purple)
 
-Vertical randomization. With this probability, the played note is taken from a randomly-chosen ROW at the current column position. Rows below LEN still count.
+Vertical randomization. With this probability, the played note is taken from a randomly-chosen ROW at the current column position (column = step mod 16). Rows below LEN still count — that's the whole point.
 
 - **ON / OFF** toggle (purple pill).
-- **PROB**.
+- **PROB** — a purple slider with a live `0%..100%` readout. Sets the probability that a migration roll succeeds on every eligible step.
 
-Per-step purple dots scope it. A purple dot on a step is enough to enable migration for that step even when global MIGRATE is OFF.
+**Eligibility rule (simple):**
+
+- Global **MIGRATE ON** → applies to **all** steps. Per-step purple dots are ignored.
+- Global **MIGRATE OFF** → applies **only** to steps with a purple dot lit. Everything else plays its written note.
+
+In both cases the PROB roll then gates whether the swap actually happens on a given trigger. The stored sequence is never mutated; the swap is "live" per trigger.
 
 #### PARAM LOCK (gray)
 

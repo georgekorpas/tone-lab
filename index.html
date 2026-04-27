@@ -8,7 +8,7 @@
 <title>Tone Lab — FM Synthesis Visualizer</title>
 <!-- BUILD-TAG: v2026-04-26-morphing+playfix+spring2 — if you see this in
      View-Source but not the new UI, your browser is serving a cached copy. -->
-<meta name="tonelab-build" content="v2026-04-27-filter-norm+full-readme">
+<meta name="tonelab-build" content="v2026-04-27-midi-export-orange">
 <style>
   :root{
     --bg:#0a0b0d;
@@ -370,6 +370,24 @@
   .seq-migrate-box .sq-tx-lbl{color:var(--migr-c)}
   .seq-migrate-box .sq-lbl{color:var(--migr-c)}
   .seq-migrate-box .sq-lbl select{border-color:rgba(192,132,252,0.5);color:var(--migr-c)}
+  /* MIGRATE PROB slider — inline 0-100% with live % readout */
+  .seq-mig-prob{display:inline-flex;align-items:center;gap:6px}
+  .seq-mig-prob input[type=range]{width:80px;height:4px;
+    -webkit-appearance:none;appearance:none;
+    background:linear-gradient(90deg,rgba(192,132,252,0.6),rgba(192,132,252,0.15));
+    border-radius:2px;outline:none;accent-color:var(--migr-c);cursor:pointer}
+  .seq-mig-prob input[type=range]::-webkit-slider-thumb{
+    -webkit-appearance:none;appearance:none;
+    width:11px;height:11px;border-radius:50%;background:var(--migr-c);
+    border:2px solid #0a0c0f;cursor:pointer;
+    box-shadow:0 0 6px rgba(192,132,252,0.7)}
+  .seq-mig-prob input[type=range]::-moz-range-thumb{
+    width:11px;height:11px;border-radius:50%;background:var(--migr-c);
+    border:2px solid #0a0c0f;cursor:pointer}
+  .seq-mig-prob-val{font-family:'JetBrains Mono','SF Mono',monospace;
+    font-size:9.5px;font-weight:800;color:var(--migr-c);
+    min-width:34px;text-align:right;letter-spacing:.04em;
+    font-variant-numeric:tabular-nums}
   .seq-migrate-toggle{display:inline-flex;align-items:center;justify-content:center;
     background:transparent;color:var(--migr-c);border:1px solid var(--migr-c);
     padding:3px 8px;border-radius:4px;cursor:pointer;
@@ -1197,6 +1215,43 @@
     color:#67e8f9 !important;border-color:#67e8f9 !important}
   .sym-panel button#symClearBtn:hover{background:#67e8f9 !important;
     color:#0a0c0f !important;filter:none}
+  /* MIDI EXPORT box — orange-400 (#fb923c). Distinct from chorus amber,
+     delay yellow, tpose yellow, engine yellow, and retrig red. Sits
+     directly under SYMMETRIZE in the Engine column. Exports the pure
+     MIDI note sequence (no params / locks / automation). */
+  :root{ --midi-c:#fb923c; }   /* orange-400 */
+  .sec.midi-sec{border-color:var(--midi-c) !important;border-width:2px !important;
+    flex-shrink:0;
+    box-shadow:0 0 0 1px rgba(251,146,60,0.10) inset, 0 0 12px rgba(251,146,60,0.10) !important}
+  .sec.midi-sec .sec-h{color:var(--midi-c) !important;
+    border-bottom-color:rgba(251,146,60,0.35) !important}
+  .sec.midi-sec .sec-h .led{background:var(--midi-c) !important;
+    box-shadow:0 0 10px var(--midi-c) !important}
+  .midi-panel button#midiExportMidBtn{background:var(--midi-c) !important;
+    color:#0a0c0f !important;border-color:var(--midi-c) !important}
+  .midi-panel button#midiExportTxtBtn{background:transparent !important;
+    color:#fdba74 !important;border-color:#fdba74 !important}
+  .midi-panel button#midiExportTxtBtn:hover{background:#fdba74 !important;
+    color:#0a0c0f !important;filter:none}
+  .midi-panel button#midiExportMidBtn:hover{filter:brightness(1.10)}
+  /* MIDI steps row — a labelled number input that spans the full panel
+     width above the two export buttons. */
+  .midi-panel .midi-steps-row{
+    grid-column:1 / -1;
+    display:flex;align-items:center;justify-content:space-between;
+    gap:8px;padding:2px 4px 4px;
+    font-size:9.5px;font-weight:800;letter-spacing:.18em;
+    color:var(--midi-c);text-transform:uppercase}
+  .midi-panel .midi-steps-row input[type=number]{
+    width:64px;height:24px;padding:0 6px;
+    background:#0a0c0f;color:var(--midi-c);
+    border:1px solid var(--midi-c);border-radius:4px;
+    font-family:'JetBrains Mono','SF Mono',monospace;
+    font-size:12px;font-weight:800;letter-spacing:0;text-align:center;
+    -moz-appearance:textfield;outline:none}
+  .midi-panel .midi-steps-row input[type=number]::-webkit-inner-spin-button,
+  .midi-panel .midi-steps-row input[type=number]::-webkit-outer-spin-button{
+    -webkit-appearance:none;margin:0}
   /* ================== Inline tip strip (in the header row) ==================
      Sits between the brand and the device tabs. NO background, NO borders,
      NO extra padding — keeps the header at its existing height. */
@@ -1312,6 +1367,26 @@
             <div class="rand-info"><b id="symCount">0</b> marked</div>
             <button id="symMarkedBtn" title="Symmetrize all S-marked parameters (even values only)">SYM</button>
             <button id="symClearBtn" class="clear" title="Clear all S marks">UNMARK</button>
+          </div>
+        </div>
+       </div>
+
+       <!-- MIDI EXPORT box — dumps the current sequencer note pattern as
+            a Standard MIDI File (.mid) or plain text. No params, no
+            automation, no locks — just the notes. The export is exactly
+            STEPS long: the first N steps of the sequencer are written
+            (rests included); steps beyond the current pattern length are
+            written as rests. -->
+       <div class="sec midi-sec">
+        <div class="sec-h"><span>MIDI Export</span><span class="led"></span></div>
+        <div class="sec-body">
+          <div class="rand-panel midi-panel">
+            <label class="midi-steps-row" title="Number of steps to export. The MIDI / TXT file will be exactly this long.">
+              STEPS
+              <input type="number" id="midiExportSteps" min="1" max="64" step="1" value="16">
+            </label>
+            <button id="midiExportMidBtn" title="Download the sequence as a Standard MIDI File (.mid). One 16th-note per step.">MIDI</button>
+            <button id="midiExportTxtBtn" title="Download the sequence as a plain-text note list (step / MIDI / note name).">TXT</button>
           </div>
         </div>
        </div>
@@ -1589,10 +1664,10 @@
             <input type="checkbox" id="seqMigrateOn">
             <span class="seq-migrate-state-text" id="seqMigrateState">OFF</span>
           </label>
-          <label class="sq-lbl">PROB<select id="seqMigrateProb">
-            <option value="0.10">10%</option><option value="0.25" selected>25%</option>
-            <option value="0.50">50%</option><option value="0.75">75%</option>
-            <option value="1">100%</option></select></label>
+          <label class="sq-lbl seq-mig-prob">PROB
+            <input type="range" id="seqMigrateProb" min="0" max="1" step="0.01" value="0.25" title="Migration probability (0–100%)">
+            <span class="seq-mig-prob-val" id="seqMigrateProbVal">25%</span>
+          </label>
         </div>
         <div class="seq-lock-box" title="PARAM LOCK — Elektron-style per-step parameter overrides. Click the GRAY square in any step's bottom-right to enter edit mode for that step, then tweak any synth slider to record a lock for that step.">
           <span class="sq-tx-lbl">PARAM LOCK</span>
@@ -5194,14 +5269,14 @@ function buildSeqGrid(){
     const inLen = (i < seqState.length);
     cell.className = "seq-step" + (m===null?" empty":"") + (inLen ? "" : " inactive");
     paintCell(cell, i);
+    /* Note range clamped to C1 (MIDI 24) … C7 (MIDI 96) */
+    const NOTE_LO = 24, NOTE_HI = 96;
     cell.addEventListener("click", e=>{
-      /* Ignore clicks that came from the retrig dot (it stops propagation
-         already, but defensive) */
       if(e.target.classList && e.target.classList.contains("retrig-dot")) return;
       let v = seqState.steps[i];
       if(e.altKey){ v = null; }
-      else if(e.shiftKey){ v = (v===null) ? 71 : (v<=36?null:v-1); }
-      else              { v = (v===null) ? 60 : (v>=84?null:v+1); }
+      else if(e.shiftKey){ v = (v===null) ? 71 : (v<=NOTE_LO?null:v-1); }
+      else               { v = (v===null) ? 60 : (v>=NOTE_HI?null:v+1); }
       seqState.steps[i] = v;
       paintCell(cell, i);
     });
@@ -5209,7 +5284,7 @@ function buildSeqGrid(){
       e.preventDefault();
       if(e.target.classList && e.target.classList.contains("retrig-dot")) return;
       let v = seqState.steps[i];
-      v = (v===null) ? 71 : (v<=36?null:v-1);
+      v = (v===null) ? 71 : (v<=NOTE_LO?null:v-1);
       seqState.steps[i] = v;
       paintCell(cell, i);
     });
@@ -5262,11 +5337,16 @@ function randomizeSeq(){
      occasional rests for musicality. */
   const restProb = 0.15;
   const intervals = SCALES[scaleName] || SCALES["Ionian (Major)"];
-  /* build pool over ~2 octaves, root C4 = MIDI 60 + root offset */
+  /* Build pool over ~3 octaves around C4, but always clamp to the
+     sequencer's allowed range C1..C7 (MIDI 24..96). */
+  const NOTE_LO = 24, NOTE_HI = 96;
   const baseMidi = 60 + root;
   const pool = [];
-  for(let oct=-1; oct<=1; oct++){
-    intervals.forEach(iv => pool.push(baseMidi + iv + oct*12));
+  for(let oct = -1; oct <= 1; oct++){
+    intervals.forEach(iv => {
+      const n = baseMidi + iv + oct*12;
+      if(n >= NOTE_LO && n <= NOTE_HI) pool.push(n);
+    });
   }
   const len = seqState.length || 16;
   /* If any per-step rand-dot is set, randomize ONLY those dotted steps
@@ -5317,22 +5397,15 @@ function seqTick(){
   const rtProb    = rtProbEl ? parseFloat(rtProbEl.value)  : 0.5;
   const anyDotted = !!seqState.retrigSteps && seqState.retrigSteps.some(Boolean);
   const SEQ_ROW_LEN = 16;          /* the grid is 4 rows × 16 cols */
-  /* Scope-flag: any per-step migrate dot set means MIGRATE only fires
-     on dotted steps; otherwise it can fire on any step. */
-  const anyMigDotted = !!seqState.migrateSteps && seqState.migrateSteps.some(Boolean);
   while(seqState.nextTime < audioCtx.currentTime + lookahead){
     const stepIdx = seqState.step;
     let m = seqState.steps[stepIdx];
-    /* MIGRATE: pick from any of the 4 rows at this column. New rules
-       (matching RETRIG): a per-step purple dot is enough to enable
-       MIGRATE for that step on its own — global MIGRATE doesn't have to
-       be ON for the dot to fire.
-         - if THIS step's purple dot is ON  → migrate (regardless of global)
-         - else if global MIGRATE is ON AND no dots are set → migrate
-         - else                              → no migrate
-       In all cases the PROB roll then gates the action.                */
+    /* MIGRATE eligibility (simplified per user spec):
+         - global MIGRATE ON  → applies to ALL steps (dots ignored)
+         - global MIGRATE OFF → applies ONLY to dotted steps
+       In both cases the PROB roll then gates the action.               */
     const stepMigDotted = !!seqState.migrateSteps[stepIdx];
-    const migEligible   = stepMigDotted || (migOn && !anyMigDotted);
+    const migEligible   = migOn || stepMigDotted;
     if(migEligible && Math.random() < migProb){
       const col = stepIdx % SEQ_ROW_LEN;
       const row = Math.floor(Math.random() * 4);   /* 0..3 */
@@ -5596,11 +5669,20 @@ document.getElementById("seqLen").addEventListener("change", e=> setSeqLength(pa
   const chk = document.getElementById("seqMigrateOn");
   const lbl = document.getElementById("seqMigrateLabel");
   const txt = document.getElementById("seqMigrateState");
-  if(!chk || !lbl || !txt) return;
-  chk.addEventListener("change", ()=>{
-    lbl.classList.toggle("on", chk.checked);
-    txt.textContent = chk.checked ? "ON" : "OFF";
-  });
+  if(chk && lbl && txt){
+    chk.addEventListener("change", ()=>{
+      lbl.classList.toggle("on", chk.checked);
+      txt.textContent = chk.checked ? "ON" : "OFF";
+    });
+  }
+  /* Live % readout for the MIGRATE PROB slider */
+  const probEl = document.getElementById("seqMigrateProb");
+  const probLb = document.getElementById("seqMigrateProbVal");
+  if(probEl && probLb){
+    const renderProb = ()=>{ probLb.textContent = Math.round(parseFloat(probEl.value)*100) + "%"; };
+    probEl.addEventListener("input", renderProb);
+    renderProb();
+  }
 })();
 /* RETRIG — burst toggle (mirrors MIGRATE wiring) */
 (function wireRetrig(){
@@ -5801,12 +5883,13 @@ function restoreFxSliderValues(){
     }, true);   /* capture phase so we run BEFORE original bubble-phase listeners */
   });
 })();
-/* Transpose all notes up/down by 1 semitone (or 1 octave with Shift) */
+/* Transpose all notes up/down by 1 semitone (or 1 octave with Shift) — clamped to C1..C7 (24..96) */
 function transposeSeq(amount){
+  const NOTE_LO = 24, NOTE_HI = 96;
   for(let i=0;i<seqState.steps.length;i++){
     if(seqState.steps[i] === null) continue;
-    const v = seqState.steps[i] + amount;
-    if(v >= 0 && v <= 127) seqState.steps[i] = v;
+    const v = Math.max(NOTE_LO, Math.min(NOTE_HI, seqState.steps[i] + amount));
+    seqState.steps[i] = v;
   }
   buildSeqGrid();
 }
@@ -6178,7 +6261,11 @@ function applyParsedPatch(p, opts){
         setSel("seqRoot",  p.sequencer.root);
         setSel("seqRest",  p.sequencer.rest);
         setSel("seqProb",  p.sequencer.prob);
-        setSel("seqMigrateProb", p.sequencer.migrateProb);
+        /* MIGRATE PROB is a slider now; restore directly */
+        if(p.sequencer.migrateProb != null){
+          const mp = document.getElementById("seqMigrateProb");
+          if(mp){ mp.value = p.sequencer.migrateProb; mp.dispatchEvent(new Event("input")); }
+        }
         /* Restore MIGRATE on/off toggle visual state */
         const migChk = document.getElementById("seqMigrateOn");
         const migLbl = document.getElementById("seqMigrateLabel");
@@ -6299,6 +6386,134 @@ const _symBtn = document.getElementById("symMarkedBtn");
 const _symClr = document.getElementById("symClearBtn");
 if(_symBtn) _symBtn.addEventListener("click", symmetrizeMarked);
 if(_symClr) _symClr.addEventListener("click", clearSymMarks);
+/* ============================================================
+   MIDI EXPORT — dump the current sequencer pattern as either
+   a Standard MIDI File (.mid, type-0) or a plain text note list.
+   Pure notes only: no params, no automation, no locks.
+   The export length is whatever the user types into the STEPS
+   field (1..64). The first N steps are written verbatim;
+   anything past the active sequencer pattern is emitted as a
+   rest. Each step is one tick of the file's note-grid — the
+   downstream device decides what musical duration that is.
+   ============================================================ */
+(function wireMidiExport(){
+  const midBtn = document.getElementById("midiExportMidBtn");
+  const txtBtn = document.getElementById("midiExportTxtBtn");
+  const stepsEl = document.getElementById("midiExportSteps");
+  if(!midBtn || !txtBtn || !stepsEl) return;
+
+  /* Default the steps field to whatever the sequencer length is on
+     load, then leave it alone — the user owns this value. */
+  if(seqState && seqState.length) stepsEl.value = seqState.length;
+
+  function getExportSteps(){
+    let n = parseInt(stepsEl.value, 10);
+    if(!isFinite(n) || n < 1) n = 1;
+    if(n > 64) n = 64;
+    return n;
+  }
+  /* Sanitize on blur so weird values snap into range. */
+  stepsEl.addEventListener("change", ()=>{ stepsEl.value = getExportSteps(); });
+
+  /* MIDI note number → note name (e.g. 60 → "C4"). */
+  const NOTE_NAMES = ["C","C#","D","D#","E","F","F#","G","G#","A","A#","B"];
+  function midiToName(n){
+    const oct = Math.floor(n/12) - 1;     /* MIDI 60 = C4 (Yamaha convention) */
+    return NOTE_NAMES[n%12] + oct;
+  }
+  function noteAt(i){
+    if(!seqState || !Array.isArray(seqState.steps)) return null;
+    const v = seqState.steps[i];
+    return (v === undefined || v === null) ? null : v;
+  }
+  function downloadBlob(blob, filename){
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement("a");
+    a.href = url; a.download = filename;
+    document.body.appendChild(a); a.click();
+    setTimeout(()=>{ document.body.removeChild(a); URL.revokeObjectURL(url); }, 100);
+  }
+
+  /* ----------------- TXT export ----------------- */
+  txtBtn.addEventListener("click", ()=>{
+    const len = getExportSteps();
+    const lines = [];
+    lines.push("# Tone Lab — sequencer note dump");
+    lines.push("# step  midi  note");
+    lines.push(`# steps=${len}   (---  =  rest)`);
+    for(let i=0;i<len;i++){
+      const n = noteAt(i);
+      if(n === null){
+        lines.push(`${String(i+1).padStart(3," ")}   ---   ----`);
+      } else {
+        lines.push(`${String(i+1).padStart(3," ")}   ${String(n).padStart(3," ")}   ${midiToName(n)}`);
+      }
+    }
+    const blob = new Blob([lines.join("\n")+"\n"], {type:"text/plain"});
+    const stamp = new Date().toISOString().slice(0,19).replace(/[T:]/g,"-");
+    downloadBlob(blob, `tonelab_seq_${stamp}.txt`);
+  });
+
+  /* ----------------- MIDI (.mid) export -----------------
+     Standard MIDI File, format 0, single track. Each non-rest
+     step becomes a note-on / note-off pair lasting one grid
+     tick (PPQ/4 = a 16th at the file's nominal tempo). The
+     destination device can re-time it to whatever it wants —
+     we don't bake the visualizer's BPM into the file. */
+  function writeVarLen(n){
+    const bytes = [];
+    bytes.unshift(n & 0x7F);
+    n >>= 7;
+    while(n > 0){ bytes.unshift((n & 0x7F) | 0x80); n >>= 7; }
+    return bytes;
+  }
+  function buildSMF(){
+    const PPQ = 480;                              /* ticks per quarter note */
+    const STEP_TICKS = PPQ / 4;                   /* one step = 16th */
+    const len = getExportSteps();
+    const VELOCITY = 100;
+    const CHAN = 0;                               /* MIDI channel 1 */
+
+    const trackBytes = [];
+    /* Time signature 4/4, 24 MIDI clocks per click, 8 32nds per quarter. */
+    trackBytes.push(0x00, 0xFF, 0x58, 0x04, 0x04, 0x02, 0x18, 0x08);
+    /* No tempo meta — the receiving device sets its own tempo. */
+
+    let pendingDelta = 0;
+    for(let i=0;i<len;i++){
+      const n = noteAt(i);
+      if(n === null){
+        pendingDelta += STEP_TICKS;
+        continue;
+      }
+      const note = Math.max(0, Math.min(127, n|0));
+      trackBytes.push(...writeVarLen(pendingDelta), 0x90 | CHAN, note, VELOCITY);
+      trackBytes.push(...writeVarLen(STEP_TICKS),   0x80 | CHAN, note, 0x40);
+      pendingDelta = 0;
+    }
+    trackBytes.push(...writeVarLen(pendingDelta), 0xFF, 0x2F, 0x00);
+
+    const header = [
+      0x4D,0x54,0x68,0x64, 0x00,0x00,0x00,0x06,
+      0x00,0x00, 0x00,0x01, (PPQ>>8)&0xFF, PPQ&0xFF
+    ];
+    const trkLen = trackBytes.length;
+    const trackHdr = [
+      0x4D,0x54,0x72,0x6B,
+      (trkLen>>24)&0xFF, (trkLen>>16)&0xFF, (trkLen>>8)&0xFF, trkLen&0xFF
+    ];
+    return new Uint8Array([...header, ...trackHdr, ...trackBytes]);
+  }
+  midBtn.addEventListener("click", ()=>{
+    const bytes = buildSMF();
+    const blob  = new Blob([bytes], {type:"audio/midi"});
+    const stamp = new Date().toISOString().slice(0,19).replace(/[T:]/g,"-");
+    downloadBlob(blob, `tonelab_seq_${stamp}.mid`);
+  });
+
+  /* Expose for debugging / programmatic export. */
+  window.exportSeqAsMIDI = ()=>buildSMF();
+})();
 /* Display zoom controls */
 function setZoomLabels(){
   document.getElementById("waveYScaleVal").textContent =
