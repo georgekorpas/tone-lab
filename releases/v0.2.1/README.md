@@ -1,8 +1,6 @@
 # Tone Lab — User Manual
 
-**▶ Live demo: https://georgekorpas.github.io/tone-lab/**
-
-A single-file in-browser FM synthesizer, sound-design playground and step sequencer. Open the live demo above in any modern browser (Chrome, Safari, Firefox, Edge) — no installation, no build step, no network calls.
+A single-file in-browser FM synthesizer, sound-design playground and step sequencer. Open `digitone_visualizer.html` in any modern browser (Chrome, Safari, Firefox, Edge) — no installation, no build step, no network calls.
 
 This manual walks the entire interface from the simplest concepts down to the deepest features, in the order the controls actually appear on screen.
 
