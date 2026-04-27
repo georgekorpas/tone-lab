@@ -8,7 +8,7 @@
 <title>Tone Lab — FM Synthesis Visualizer</title>
 <!-- BUILD-TAG: v2026-04-26-morphing+playfix+spring2 — if you see this in
      View-Source but not the new UI, your browser is serving a cached copy. -->
-<meta name="tonelab-build" content="v2026-04-27-preset-stepper-bordered">
+<meta name="tonelab-build" content="v2026-04-27-filter-norm+full-readme">
 <style>
   :root{
     --bg:#0a0b0d;
@@ -995,6 +995,19 @@
   .filter-head{font-size:9px;letter-spacing:.18em;text-transform:uppercase;
     color:var(--muted);margin-bottom:6px;display:flex;justify-content:space-between;align-items:center;font-weight:700}
   .filter-head .filter-hint{font-size:9px;color:var(--muted-2);font-style:normal;font-weight:500;letter-spacing:.05em;text-transform:none}
+  /* NORM toggle in the filter header — keeps perceived loudness constant
+     across cutoff / resonance sweeps via post-filter RMS makeup gain. */
+  .filt-norm{display:inline-flex;align-items:center;cursor:pointer;
+    background:transparent;border:1px solid rgba(34,211,238,0.55);
+    padding:2px 8px;border-radius:11px;font-size:9px;letter-spacing:.14em;
+    text-transform:uppercase;color:var(--filter-c);font-weight:800;
+    line-height:1.2;user-select:none;
+    transition:all .12s ease;margin-left:4px}
+  .filt-norm:hover{background:rgba(34,211,238,0.10)}
+  .filt-norm.on{background:var(--filter-c) !important;color:#0a0c0f !important;
+    border-color:var(--filter-c) !important;
+    box-shadow:0 0 8px rgba(34,211,238,0.55)}
+  .filt-norm input{display:none}
   /* Filter type selector pill */
   .filt-type{display:inline-flex;background:var(--panel-2);border:1px solid var(--line);
     border-radius:11px;padding:2px;gap:0}
@@ -1328,6 +1341,11 @@
                 <button data-t="ladder">Ladder</button>
                 <button data-t="sem">SEM</button>
               </div>
+              <label class="filt-norm" id="filtNormLabel"
+                title="NORM — auto-compensate the level so perceived loudness stays the same as you sweep CUT and RES.">
+                <input type="checkbox" id="filt_norm">
+                <span class="filt-norm-state" id="filtNormState">NORM</span>
+              </label>
             </div>
             <div class="filter-grid">
               <div class="filter-cell"><label>CUT <span id="val_filt_cut">1.00</span></label>
@@ -3801,11 +3819,12 @@ function drawSpec(samples){
    feedback. Tanh on the feedback path keeps things stable
    at high resonance (Curtis SSM2044 character).
 ================================================================ */
-const FILT = {type:"curtis", cut:1, res:0, drive:0.2,
+const FILT = {type:"curtis", cut:1, res:0, drive:0.2, norm:false,
   envOn:false, envAmt:0, envAtk:0.001, envDec:0.15, envSus:0.05, envRel:0.10};
 function readFilter(){
   FILT.cut   = parseFloat(document.getElementById("filt_cut").value);
   FILT.res   = parseFloat(document.getElementById("filt_res").value);
+  const nEl  = document.getElementById("filt_norm"); if(nEl) FILT.norm = !!nEl.checked;
   FILT.drive = parseFloat(document.getElementById("filt_drv").value);
   const onChk = document.getElementById("fenvOn"); if(onChk) FILT.envOn = !!onChk.checked;
   const a = document.getElementById("fenv_amt"); if(a) FILT.envAmt = parseFloat(a.value);
@@ -4890,7 +4909,26 @@ function renderNoteBuffer(freq, tStart){
      Pass tStart so the filter LFO is BPM-clock synced like the
      engine LFOs (continuous phase across sequencer steps). */
   readFilter();
+  /* Measure pre-filter RMS — used by NORM (auto-gain compensation)
+     to keep perceived loudness constant across CUT and RES sweeps. */
+  let preRms = 0;
+  if(FILT.norm){
+    for(let i=0;i<N;i++) preRms += buf[i]*buf[i];
+    preRms = Math.sqrt(preRms / Math.max(1, N));
+  }
   applyCurtisWithEnv(buf, FILT.cut, FILT.res, FILT.drive, aSR, tStart);
+  /* NORM — measure post-filter RMS and apply makeup gain so the perceived
+     loudness matches the pre-filter signal. Capped at ×8 boost so we
+     don't blow up at near-closed cutoffs (where post-RMS → 0). */
+  if(FILT.norm && preRms > 0.001){
+    let postRms = 0;
+    for(let i=0;i<N;i++) postRms += buf[i]*buf[i];
+    postRms = Math.sqrt(postRms / Math.max(1, N));
+    if(postRms > 1e-5){
+      const gain = Math.min(8, preRms / postRms);
+      for(let i=0;i<N;i++) buf[i] *= gain;
+    }
+  }
   /* Apply soft tanh saturation to tame any remaining harsh spikes */
   for(let i=0;i<N;i++) buf[i] = softClip(buf[i]);
   /* Apply AMP ADSR envelope */
@@ -5793,6 +5831,18 @@ if(_octDownBtn) _octDownBtn.addEventListener("click", () => transposeSeq(-12));
     liveUpdate();
   });
 });
+/* NORM toggle — auto level-compensation across CUT/RES sweeps */
+(function wireFilterNorm(){
+  const chk = document.getElementById("filt_norm");
+  const lbl = document.getElementById("filtNormLabel");
+  if(!chk || !lbl) return;
+  chk.addEventListener("change", ()=>{
+    lbl.classList.toggle("on", chk.checked);
+    FILT.norm = chk.checked;
+    schedule();
+    liveUpdate();
+  });
+})();
 /* Filter type selector (Curtis / Ladder) */
 document.querySelectorAll("#filtType button").forEach(b=>{
   b.addEventListener("click",()=>{
