@@ -6,7 +6,7 @@ An in-browser FM synthesizer, sequencer and sound-design playground.
 
 ## Live demo
 
-https://PAGES_URL_PLACEHOLDER
+https://georgekorpas.github.io/tone-lab/
 
 ## Updating
 
