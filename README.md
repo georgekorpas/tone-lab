@@ -1,6 +1,6 @@
 # Tone Lab — User Manual
 
-**▶ Live demo: https://georgekorpas.github.io/tone-lab/**
+**▶ Live demo (stable, v0.2.1): https://georgekorpas.github.io/tone-lab/**
 
 A single-file in-browser FM synthesizer, sound-design playground and step sequencer. Open the live demo above in any modern browser (Chrome, Safari, Firefox, Edge) — no installation, no build step, no network calls.
 
@@ -17,7 +17,7 @@ Tone Lab models two distinct sound-engine families, switched at the top-right of
 
 Switching device only changes which engines are *available*; your current patch (the slider state) stays put if the chosen machine still exists. Otherwise it falls back to FM TONE.
 
-The version pill `v0.2.1` next to the title shows the build, and the discrete tip strip in the header centre cycles through 12 sound-design tips when you click ‹ ›.
+The version pill `v0.3.0-dev` next to the title shows the build, and the discrete tip strip in the header centre cycles through 12 sound-design tips when you click ‹ ›.
 
 ---
 
@@ -393,7 +393,7 @@ A discrete inline strip in the centre of the header cycles through 12 sound-desi
 
 ## 20. Build version
 
-The pill `v0.2.1` next to the title shows the major version. The browser-readable build tag (in DevTools → Elements → `<head>`) under `<meta name="tonelab-build">` shows the precise build identifier — useful for verifying you've reloaded after an update.
+The pill `v0.3.0-dev` next to the title shows the major version. The browser-readable build tag (in DevTools → Elements → `<head>`) under `<meta name="tonelab-build">` shows the precise build identifier — useful for verifying you've reloaded after an update.
 
 ---
 
