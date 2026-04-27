@@ -8,7 +8,7 @@
 <title>Tone Lab — FM Synthesis Visualizer</title>
 <!-- BUILD-TAG: v2026-04-26-morphing+playfix+spring2 — if you see this in
      View-Source but not the new UI, your browser is serving a cached copy. -->
-<meta name="tonelab-build" content="v2026-04-27-midi-export-orange">
+<meta name="tonelab-build" content="v2026-04-27-d2-engines-renamed">
 <style>
   :root{
     --bg:#0a0b0d;
@@ -101,7 +101,7 @@
   /* ENGINE color — yellow-green chartreuse, warmer than morph-lime,
      distinct from every other section. */
   :root{--engine-c:#d9e02b; --engine-c-dim:rgba(217,224,43,0.45)}
-  /* Engine machine buttons (FM TONE / FM DRUM / WAVETONE / SWARMER) —
+  /* Engine machine buttons (FM TONE / FM PERC / WAVECORE / HIVE) —
      FLAT colors only (no gradients), warm orange identity. */
   body .engine-machines button,
   body.theme-d2 .engine-machines button,
@@ -1696,10 +1696,12 @@
 
 <script>
 /* ================================================================
-   DIGITONE WAVEFORM VISUALIZER
-   - D1: FM TONE only (per OS 1.41 manual)
-   - D2: FM TONE, FM DRUM, WAVETONE, SWARMER (per OS 1.10D manual)
-   - Schemas mirror the actual SYN1/SYN2 hardware pages.
+   TONE LAB — engine schemas
+   - D1: FM TONE only.
+   - D2: FM TONE, FM PERC, WAVECORE, HIVE.
+   - Internal machine IDs (fmtone, fmdrum, wavetone, swarmer) are
+     preserved verbatim for backward compatibility with old patches.
+   - Schemas mirror the original SYN1/SYN2 page layouts.
    - FM TONE operators are sine-only; HARM modifies harmonic
      content per operator, as described in Appendix A/B of the
      manuals: HARM<0 enriches operator C, HARM>0 enriches A & B1.
@@ -2079,15 +2081,15 @@ const LFO_RANGES = {
   levA:40, levB:40,
   atkA:30, decA:40, endA:40,
   atkB:30, decB:40, endB:40,
-  /* FM DRUM */
+  /* FM PERC (fmdrum) */
   tune:30, stim:40, sdep:40, fold:40,
   ratioA:1, ratioB:2, modA:40, modB:40,
   bDec:40, bLev:40,
   nBase:40, nWdth:40, nDec:40, nLev:40,
-  /* WAVETONE */
+  /* WAVECORE (wavetone) */
   tun1:0.5, tun2:0.5, wav1:0.4, wav2:0.4,
   pd1:0.4, pd2:0.4, lev1:0.5, lev2:0.5,
-  /* SWARMER */
+  /* HIVE (swarmer) */
   det:0.4, anim:0.4, nmod:0.4,
   /* Filter + Filter Envelope */
   filt_cut:0.5, filt_res:0.4, filt_drv:0.5,
@@ -2360,14 +2362,14 @@ function renderFMTone(p, freq, N, opts){
 }
 
 /* ================================================================
-   FM DRUM  (Digitone II)
+   FM PERC  (D2 only — internal id: fmdrum)
    3 operators (C, A, B). Operators C and AB have selectable
    waveforms (OP.C, OP.AB).  Pitch sweep + body envelope + noise
-   + transient.  This is a percussion-tuned engine.
+   + transient.  Percussion-tuned engine.
 ================================================================ */
 
-/* Bandlimited classic waveforms (used by FM DRUM op waves and
-   by SWARMER main/swarm and by WAVETONE PRIM table).        */
+/* Bandlimited classic waveforms (used by FM PERC op waves and
+   by HIVE main/swarm and by WAVECORE PRIM table).            */
 const WAVE_LABELS = {sine:"SIN",tri:"TRI",saw:"SAW",square:"SQR"};
 function classicWave(phase, type){
   const p = ((phase/(2*Math.PI)) % 1 + 1) % 1;
@@ -2483,7 +2485,7 @@ function renderFMDrum(p, freq, N, opts){
 }
 
 /* ================================================================
-   WAVETONE  (Digitone II)
+   WAVECORE  (D2 only — internal id: wavetone)
    Two oscillators, each with a wavetable (PRIM = sin/tri/saw/sqr,
    HARM = additive harmonic combinations) selected by TBL1/TBL2.
    WAV1/WAV2 morphs through the table.  PD = phase distortion.
@@ -2584,7 +2586,7 @@ function renderWavetone(p, freq, N){
 }
 
 /* ================================================================
-   SWARMER  (Digitone II)
+   HIVE  (D2 only — internal id: swarmer)
    Main oscillator + 6 detuned swarm voices.
    Both main and swarm have selectable waveforms.
 ================================================================ */
@@ -2669,7 +2671,7 @@ const SCHEMA = {
   },
 
   fmdrum: {
-    name:"FM DRUM",
+    name:"FM PERC",
     devices:["d2"],
     syn1:[
       {section:"PAGE 1  (ALGO chosen via diagram below)"},
@@ -2705,7 +2707,7 @@ const SCHEMA = {
   },
 
   wavetone: {
-    name:"WAVETONE",
+    name:"WAVECORE",
     devices:["d2"],
     syn1:[
       {section:"PAGE 1 — OSCILLATORS"},
@@ -2731,7 +2733,7 @@ const SCHEMA = {
   },
 
   swarmer: {
-    name:"SWARMER",
+    name:"HIVE",
     devices:["d2"],
     syn1:[
       {section:"PAGE 1 — SWARM"},
@@ -2977,7 +2979,7 @@ const PRESETS = {
       amp_atk:0.005,amp_dec:0.10,amp_sus:0.10,amp_rel:0.10,amp_len:0.25},
   },
   swarmer:{
-    /* DEC + SUS clamped to CTRL region. SWARMER's character lives in
+    /* DEC + SUS clamped to CTRL region. HIVE's character lives in
        its detune/animation rather than a long AMP tail. */
     "Init":{tune:0,swrm:"saw",det:0.3,mix:0.6,moct:0,main:"saw",anim:0.3,nmod:0,
       amp_atk:0.03,amp_dec:0.10,amp_sus:0.15,amp_rel:0.25,amp_len:0.40},
@@ -3107,7 +3109,7 @@ function rebuildMachineTabs(){
   /* IMPORTANT: keep the `engine-machines` class — it carries the
      bright-blue styling that distinguishes the engine selector tabs
      from generic .machines tabs. Earlier this was clobbered to just
-     "machines", which is why FM TONE / FM DRUM kept reverting to the
+     "machines", which is why FM TONE / FM PERC kept reverting to the
      generic D1/D2 device-accent colors. */
   wrap.className = "machines engine-machines" + (list.length===1?" cnt-1":"");
   list.forEach(m=>{
@@ -3507,9 +3509,9 @@ function updateAlgDisplay(){
       });
     });
   } else if(state.machine === "wavetone"){
-    div.innerHTML = `<div style="text-align:center;color:#c8cdd6;font-size:11px;line-height:1.7"><b style="color:#fff">WAVETONE</b><br>Two oscillators with selectable wavetables<br>(PRIM = sin/tri/saw/sqr, HARM = harmonic combinations)<br>+ phase distortion + ring/sync + noise</div>`;
+    div.innerHTML = `<div style="text-align:center;color:#c8cdd6;font-size:11px;line-height:1.7"><b style="color:#fff">WAVECORE</b><br>Two oscillators with selectable wavetables<br>(PRIM = sin/tri/saw/sqr, HARM = harmonic combinations)<br>+ phase distortion + ring/sync + noise</div>`;
   } else if(state.machine === "swarmer"){
-    div.innerHTML = `<div style="text-align:center;color:#c8cdd6;font-size:11px;line-height:1.7"><b style="color:#fff">SWARMER</b><br>Main oscillator + 6 detuned swarm voices<br>Both have selectable waveforms<br>ANIM modulates each swarm pitch</div>`;
+    div.innerHTML = `<div style="text-align:center;color:#c8cdd6;font-size:11px;line-height:1.7"><b style="color:#fff">HIVE</b><br>Main oscillator + 6 detuned swarm voices<br>Both have selectable waveforms<br>ANIM modulates each swarm pitch</div>`;
   }
 }
 
@@ -3521,11 +3523,11 @@ function updateInfo(){
   if(m==="fmtone"){
     txt = `<b>FM TONE</b> — 4 sine operators (C, A, B1, B2). <b>HARM</b> is bipolar (−26…+26): negative values enrich operator C with upper partials, positive values enrich operators A and B1. <b>RATIO B</b> is a single hardware encoder that drives both B1 and B2 in a "watch-hand" pattern; here they're exposed separately. <b>LEV B</b> is macro-mapped to B1 and B2 per the manual's level curve. <b>MIX</b> (−64…+63) cross-fades between the algorithm's two carrier outputs (X and Y). <b>FDBK</b> is self-modulation on the algorithm's top modulator.`;
   } else if(m==="fmdrum"){
-    txt = `<b>FM DRUM</b> — 3-operator FM (C, A, B) tuned for percussion. Unlike FM TONE, <b>OP.C</b> and <b>OP.AB</b> let you choose the operator base waveforms. <b>STIM/SDEP</b> = pitch sweep time/depth. <b>FOLD</b> = wavefolding on the body. <b>NLEV/BASE/WDTH</b> control the bandpassed noise. With HOLD, the pitch and body envelopes are frozen so the loop is steady.`;
+    txt = `<b>FM PERC</b> — 3-operator FM (C, A, B) tuned for percussion. Unlike FM TONE, <b>OP.C</b> and <b>OP.AB</b> let you choose the operator base waveforms. <b>STIM/SDEP</b> = pitch sweep time/depth. <b>FOLD</b> = wavefolding on the body. <b>NLEV/BASE/WDTH</b> control the bandpassed noise. With HOLD, the pitch and body envelopes are frozen so the loop is steady.`;
   } else if(m==="wavetone"){
-    txt = `<b>WAVETONE</b> — Two oscillators each pointing at a wavetable selected by <b>TBL1/TBL2</b>: PRIM = Sin/Tri/Saw/Sqr crossfade, HARM = harmonic-stack crossfade. <b>WAV1/WAV2</b> sweep the table position. <b>PD</b> = phase distortion (asymmetric phase warp — acts like pulse-width on any wave). <b>MOD</b> sets oscillator interaction (off / ring mod / fixed ring / hard sync).`;
+    txt = `<b>WAVECORE</b> — Two oscillators each pointing at a wavetable selected by <b>TBL1/TBL2</b>: PRIM = Sin/Tri/Saw/Sqr crossfade, HARM = harmonic-stack crossfade. <b>WAV1/WAV2</b> sweep the table position. <b>PD</b> = phase distortion (asymmetric phase warp — acts like pulse-width on any wave). <b>MOD</b> sets oscillator interaction (off / ring mod / fixed ring / hard sync).`;
   } else if(m==="swarmer"){
-    txt = `<b>SWARMER</b> — One <b>MAIN</b> oscillator + 6 detuned swarm voices, both with selectable waveforms. <b>DET</b> spreads the swarm in cents. <b>ANIM</b> applies hidden LFOs to each swarm voice's pitch. <b>M.OCT</b> tunes the main down 1 or 2 octaves while leaving the swarm at the played pitch. <b>N.MOD</b> adds noise modulation to the swarm.`;
+    txt = `<b>HIVE</b> — One <b>MAIN</b> oscillator + 6 detuned swarm voices, both with selectable waveforms. <b>DET</b> spreads the swarm in cents. <b>ANIM</b> applies hidden LFOs to each swarm voice's pitch. <b>M.OCT</b> tunes the main down 1 or 2 octaves while leaving the swarm at the played pitch. <b>N.MOD</b> adds noise modulation to the swarm.`;
   }
   i.innerHTML = txt;
 }

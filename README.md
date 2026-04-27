@@ -12,8 +12,8 @@ This manual walks the entire interface from the simplest concepts down to the de
 
 Tone Lab models two distinct sound-engine families, switched at the top-right of the header:
 
-- **D1 (Digitone I)** — only the FM TONE engine is available. The original 4-operator FM voice.
-- **D2 (Digitone II)** — adds three more engines on top of FM TONE: FM DRUM, WAVETONE and SWARMER.
+- **D1** — only the FM TONE engine is available. The original 4-operator FM voice.
+- **D2** — adds three more engines on top of FM TONE: **FM PERC**, **WAVECORE** and **HIVE**.
 
 Switching device only changes which engines are *available*; your current patch (the slider state) stays put if the chosen machine still exists. Otherwise it falls back to FM TONE.
 
@@ -27,10 +27,10 @@ The leftmost box on the screen is the **ENGINE** box. Inside, you pick which syn
 
 ### The four engines
 
-- **FM TONE** — 4-operator FM synthesis with 8 algorithms. Bell-like tones, electric pianos, brass, bells, plucks, pads. The "main" engine of the Digitone family.
-- **FM DRUM** *(D2 only)* — 3-operator FM tuned for percussion. Punchy kicks, snares, hats, toms, claps.
-- **WAVETONE** *(D2 only)* — two oscillators, each pointing at a wavetable (`PRIM` = sin/tri/saw/sqr crossfade, `HARM` = harmonic-stack crossfade), with phase distortion, ring/sync modulation, detune and noise.
-- **SWARMER** *(D2 only)* — one main oscillator + 6 detuned swarm voices. Wide pads, supersaw-style leads.
+- **FM TONE** — 4-operator FM synthesis with 8 algorithms. Bell-like tones, electric pianos, brass, bells, plucks, pads. The "main" tonal engine, available on both D1 and D2.
+- **FM PERC** *(D2 only)* — 3-operator FM tuned for percussion. Punchy kicks, snares, hats, toms, claps.
+- **WAVECORE** *(D2 only)* — two oscillators, each pointing at a wavetable (`PRIM` = sin/tri/saw/sqr crossfade, `HARM` = harmonic-stack crossfade), with phase distortion, ring/sync modulation, detune and noise.
+- **HIVE** *(D2 only)* — one main oscillator + 6 detuned swarm voices. Wide pads, supersaw-style leads.
 
 Click any of the four buttons to switch — the SYN1 / SYN2 boxes immediately repopulate with that engine's parameters.
 
@@ -64,9 +64,9 @@ Inside the ENGINE box, below a faded chartreuse separator, sits the **PRESET** s
 Each engine ships with curated presets:
 
 - **FM TONE**: Init, Pure Sine, FM Saw, FM Square, Bell, Tubular Bell, EPiano (DX), EPiano (Soft), Rhodes MK1, Brass, Bass, Pluck, Wood, Glass, Strings, Pad, Organ, Sub Bass, Marimba, Muted Pluck.
-- **FM DRUM**: Init, Kick, Snare, HiHat, Open Hat, Tom, Clap, Cowbell, Rim Shot.
-- **WAVETONE**: Init, Pure Sine, Pure Triangle, Pure Saw, Pure Square, Pulse 25%, Saw Stack, Detuned Saws, Ring Mod, Sync Lead, Hiss.
-- **SWARMER**: Init, Wide Saw, Choir, Square Swarm, Octave Down, Soft Pad, Subtle.
+- **FM PERC**: Init, Kick, Snare, HiHat, Open Hat, Tom, Clap, Cowbell, Rim Shot.
+- **WAVECORE**: Init, Pure Sine, Pure Triangle, Pure Saw, Pure Square, Pulse 25%, Saw Stack, Detuned Saws, Ring Mod, Sync Lead, Hiss.
+- **HIVE**: Init, Wide Saw, Choir, Square Swarm, Octave Down, Soft Pad, Subtle.
 
 All presets are tuned for moderate, professional output with controlled noise.
 
